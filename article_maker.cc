@@ -1019,6 +1019,12 @@ void ArticleRequest::bodyFinished()
 
         head += "<div class=\"gddictnamebodyseparator\"></div>";
 
+	head += string( "<div>" )
+	     + "<a href=\"ankicard:" + Html::escape( dictId ) + "\" class=\"ankibutton\">"
+	     + "<img src=\"qrc:///icons/anki-add-button.svg\">"
+	     + "</a>"
+	     + "</div>";
+
         head += "<div class=\"gdarticlebody gdlangfrom-";
         head += LangCoder::intToCode2( activeDict->getLangFrom() ).toLatin1().data();
         head += "\" lang=\"";

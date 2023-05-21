@@ -43,6 +43,19 @@ pre
   /*background: #ffffdd;*/
 }
 
+.ankibutton {
+  float: right;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  border-radius: 4px;
+  padding: 3px;
+  transition: background-color 0.2s;
+}
+.ankibutton:active {
+  background-color: hsl(0deg 0% 70%);
+}
+
 /* The 'From ' string which precedes dictionary name in the heading */
 .gdfromprefix
 {

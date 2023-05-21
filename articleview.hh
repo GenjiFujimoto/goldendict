@@ -14,6 +14,7 @@
 #include "instances.hh"
 #include "groupcombobox.hh"
 #include "ui_articleview.h"
+#include "ankiconnector.h"
 
 #ifdef USE_QTWEBKIT
 #include <QWebView>
@@ -45,6 +46,8 @@ class ArticleView: public QFrame
   Config::Class const & cfg;
 
   Ui::ArticleView ui;
+
+  AnkiConnector  * ankiConnector;
 
   ArticleViewJsProxy * const jsProxy;
 
@@ -111,6 +114,7 @@ class ArticleView: public QFrame
 
   QAction * dictionaryBarToggled;
   GroupComboBox const * groupComboBox;
+  QLineEdit const * translateLine;
 
   /// Search in results of full-text search
   QStringList allMatches;
@@ -148,6 +152,7 @@ public:
                bool popupView,
                Config::Class & cfg_,
                QAction & openSearchAction_,
+	       QLineEdit const * translateLine,
                QAction * dictionaryBarToggled = 0,
                GroupComboBox const * groupComboBox = 0 );
 
@@ -185,6 +190,8 @@ public:
   void showDefinition( QString const & word, QStringList const & dictIDs,
                        QRegExp const & searchRegExp, unsigned group, bool ignoreDiacritics );
 
+  void sendToAnki(QString const & word, QString const & text, QString const & sentence );
+  void makeAnkiCardFromArticle( QString const article_id );
   /// Opens the given link. Supposed to be used in response to
   /// openLinkInNewTab() signal. The link scheme is therefore supposed to be
   /// one of the internal ones.

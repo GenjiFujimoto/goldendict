@@ -461,6 +461,7 @@ ArticleView::ArticleView( QWidget * parent, ArticleNetworkAccessManager & nm,
                           Instances::Groups const & groups_, bool popupView_,
                           Config::Class & cfg_,
                           QAction & openSearchAction_,
+			  QLineEdit const * translateLine_,
                           QAction * dictionaryBarToggled_,
                           GroupComboBox const * groupComboBox_ ):
   QFrame( parent ),
@@ -484,6 +485,7 @@ ArticleView::ArticleView( QWidget * parent, ArticleNetworkAccessManager & nm,
   isLoading( false ),
   dictionaryBarToggled( dictionaryBarToggled_ ),
   groupComboBox( groupComboBox_ ),
+  translateLine( translateLine_ ),
   ftsSearchIsOpened( false ),
   ftsSearchMatchCase( false ),
   ftsPosition( 0 )
@@ -646,6 +648,12 @@ ArticleView::ArticleView( QWidget * parent, ArticleNetworkAccessManager & nm,
   // Variable name for store current selection range
   rangeVarName = QString( "sr_%1" ).arg( QString::number( (quint64)this, 16 ) );
 #endif
+
+  ankiConnector = new AnkiConnector( this, cfg );
+  connect( ankiConnector,
+           &AnkiConnector::errorText,
+           this,
+           [ this ]( QString const & errorText ) { emit statusBarMessage( errorText ); } );
 }
 
 // explicitly report the minimum size, to avoid
@@ -768,6 +776,11 @@ void ArticleView::showDefinition( Config::InputPhrase const & phrase, QUrl const
 
   //QApplication::setOverrideCursor( Qt::WaitCursor );
   ui.definition->setCursor( Qt::WaitCursor );
+}
+
+void ArticleView::sendToAnki( QString const & word, QString const & text, QString const & sentence )
+{
+  ankiConnector->sendToAnki( word, text, sentence );
 }
 
 void ArticleView::showDefinition( QString const & word, unsigned group,
@@ -1730,6 +1743,14 @@ void ArticleView::openLinkWithFragment( QUrl const & url, QString const & scroll
   ui.definition->load( replaceScrollToInLinkWithFragment( url, scrollTo ) );
 }
 
+void ArticleView::makeAnkiCardFromArticle( QString const article_id )
+{
+  auto const js_code = QString( R"EOF(document.getElementById("gdarticlefrom-%1").innerText)EOF" ).arg( article_id );
+  ui.definition->page()->runJavaScript( js_code, [ this ]( const QVariant & article_text ) {
+    sendToAnki( ui.definition->title(), article_text.toString(), translateLine->text() );
+  } );
+}
+
 void ArticleView::openLink( QUrl const & url, QUrl const & ref,
                             QString const & scrollTo,
                             Contexts const & contexts_ )
@@ -1738,6 +1759,21 @@ void ArticleView::openLink( QUrl const & url, QUrl const & ref,
 
   Contexts contexts( contexts_ );
 
+  if ( url.scheme().compare( "ankicard" ) == 0 )
+  {
+    // If article id is set in path and selection is empty, use text from the current article.
+    // Otherwise, grab currently selected text and use it as the definition.
+    auto const selected_text = ui.definition->selectedText();
+    auto const article_id    = url.path();
+    if ( !article_id.isEmpty() && selected_text.isEmpty() ) {
+      makeAnkiCardFromArticle( article_id );
+    }
+    else {
+      sendToAnki( ui.definition->title(), ui.definition->selectedText(), translateLine->text() );
+    }
+    return;
+  }
+  else
   if( url.scheme().compare( "gdpicture" ) == 0 )
     load( url );
   else
@@ -2358,6 +2394,7 @@ void ArticleView::contextMenuRequested( QPoint const & pos )
   QAction * followLinkExternal = 0;
   QAction * followLinkNewTab = 0;
   QAction * lookupSelection = 0;
+  QAction * sendToAnkiAction = 0;
   QAction * lookupSelectionGr = 0;
   QAction * lookupSelectionNewTab = 0;
   QAction * lookupSelectionNewTabGr = 0;
@@ -2484,6 +2521,14 @@ void ArticleView::contextMenuRequested( QPoint const & pos )
     }
   }
 
+  // add anki menu
+  if( !text.isEmpty() && cfg.preferences.ankiConnectServer.enabled )
+  {
+    QString txt      = ui.definition->title();
+    sendToAnkiAction = new QAction( tr( "&Send \"%1\" to anki with selected text." ).arg( txt ), &menu );
+    menu.addAction( sendToAnkiAction );
+  }
+
   if( text.isEmpty() && !cfg.preferences.storeHistory)
   {
     QString txt = ui.definition->title();
@@ -2577,6 +2622,10 @@ void ArticleView::contextMenuRequested( QPoint const & pos )
     else
     if ( result == lookupSelectionGr && groupComboBox )
       showDefinition( selectedText, groupComboBox->getCurrentGroup(), QString() );
+    else
+    if( result == sendToAnkiAction ) {
+      sendToAnki( ui.definition->title(), ui.definition->selectedText(), translateLine->text() );
+    }
     else
     if ( result == addWordToHistoryAction )
       emit forceAddWordToHistory( selectedText );

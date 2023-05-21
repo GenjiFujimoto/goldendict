@@ -138,6 +138,22 @@ struct ProxyServer
   ProxyServer();
 };
 
+struct AnkiConnectServer
+{
+  bool enabled;
+
+  QString host;
+  unsigned port;
+  QString deck;
+  QString model;
+
+  QString word;
+  QString text;
+  QString sentence;
+
+  AnkiConnectServer();
+};
+
 // A hotkey -- currently qt modifiers plus one or two keys
 struct HotKey
 {
@@ -330,6 +346,7 @@ struct Preferences
   QString audioPlaybackProgram;
 
   ProxyServer proxyServer;
+  AnkiConnectServer ankiConnectServer;
 
   bool checkForNewReleases;
   bool disallowContentFromOtherSites;

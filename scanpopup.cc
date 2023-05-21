@@ -116,6 +116,7 @@ ScanPopup::ScanPopup( QWidget * parent,
                                 audioPlayer_,
                                 allDictionaries, groups, true, cfg,
                                 openSearchAction,
+                                ui.translateBox->translateLine(),
                                 dictionaryBar.toggleViewAction()
                                 );
 

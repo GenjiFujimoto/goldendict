@@ -13,6 +13,8 @@
 #include <QString>
 #include <QAtomicInt>
 #include <QTextDocument>
+#include <QJsonObject>
+#include <QJsonDocument>
 
 #include <QUrl>
 #if IS_QT_5
@@ -51,6 +53,11 @@ inline QString escape( QString const & plain )
   return Qt::escape( plain );
 #endif
 
+}
+
+inline QString json2String( const QJsonObject & json )
+{
+  return QString( QJsonDocument( json ).toJson( QJsonDocument::Compact ) );
 }
 
 namespace AtomicInt

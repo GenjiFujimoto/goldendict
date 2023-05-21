@@ -281,6 +281,7 @@ DEFINES += PROGRAM_VERSION=\\\"$$VERSION\\\"
 
 # Input
 HEADERS += folding.hh \
+    ankiconnector.h \
     inc_case_folding.hh \
     inc_diacritic_folding.hh \
     mainwindow.hh \
@@ -425,6 +426,7 @@ FORMS += groups.ui \
     fulltextsearch.ui
 
 SOURCES += folding.cc \
+    ankiconnector.cc \
     main.cc \
     dictionary.cc \
     config.cc \
